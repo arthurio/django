@@ -979,3 +979,12 @@ class Author(models.Model):
 class Authorship(models.Model):
     book = models.ForeignKey(Book, models.CASCADE)
     author = models.ForeignKey(Author, models.CASCADE)
+
+
+# Models for #11154
+class UserProxy(User):
+    """
+    Proxy a model with a different app_label.
+    """
+    class Meta:
+        proxy = True
