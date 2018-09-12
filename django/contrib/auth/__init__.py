@@ -206,7 +206,7 @@ def get_permission_app_label(opts):
     Return the app_label of the permission for the specified model options.
     Proxy models use the content type of the concrete model.
     """
-    return opts.concrete_model._meta.app_label
+    return opts.app_label
 
 
 def get_permission_codename(action, opts):
