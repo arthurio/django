@@ -14,7 +14,7 @@ from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.contrib.admin.tests import AdminSeleniumTestCase
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import IS_POPUP_VAR
-from django.contrib.auth import REDIRECT_FIELD_NAME, get_permission_codename
+from django.contrib.auth import REDIRECT_FIELD_NAME, get_permission_natural_key
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
@@ -1369,10 +1369,9 @@ class CustomModelAdminTest(AdminViewBasicTestCase):
         self.assertEqual(response.status_code, 200)
 
 
-def get_perm(Model, perm):
+def get_perm(action, Model):
     """Return the permission object, for the Model"""
-    ct = ContentType.objects.get_for_model(Model)
-    return Permission.objects.get(content_type=ct, codename=perm)
+    return Permission.objects.get_by_natural_key(*get_permission_natural_key(action, Model))
 
 
 @override_settings(
@@ -1415,19 +1414,18 @@ class AdminViewPermissionsTest(TestCase):
         cls.p1 = PrePopulatedPost.objects.create(title='A Long Title', published=True, slug='a-long-title')
 
         # Setup permissions, for our users who can add, change, and delete.
-        opts = Article._meta
 
         # User who can view Articles
-        cls.viewuser.user_permissions.add(get_perm(Article, get_permission_codename('view', opts)))
+        cls.viewuser.user_permissions.add(get_perm('view', Article))
         # User who can add Articles
-        cls.adduser.user_permissions.add(get_perm(Article, get_permission_codename('add', opts)))
+        cls.adduser.user_permissions.add(get_perm('add', Article))
         # User who can change Articles
-        cls.changeuser.user_permissions.add(get_perm(Article, get_permission_codename('change', opts)))
-        cls.nostaffuser.user_permissions.add(get_perm(Article, get_permission_codename('change', opts)))
+        cls.changeuser.user_permissions.add(get_perm('change', Article))
+        cls.nostaffuser.user_permissions.add(get_perm('change', Article))
 
         # User who can delete Articles
-        cls.deleteuser.user_permissions.add(get_perm(Article, get_permission_codename('delete', opts)))
-        cls.deleteuser.user_permissions.add(get_perm(Section, get_permission_codename('delete', Section._meta)))
+        cls.deleteuser.user_permissions.add(get_perm('delete', Article))
+        cls.deleteuser.user_permissions.add(get_perm('delete', Section))
 
         # login POST dicts
         cls.index_url = reverse('admin:index')
@@ -1683,7 +1681,7 @@ class AdminViewPermissionsTest(TestCase):
         self.assertEqual(post.status_code, 403)
         self.assertEqual(Article.objects.count(), 3)
         # Now give the user permission to add but not change.
-        self.viewuser.user_permissions.add(get_perm(Article, get_permission_codename('add', Article._meta)))
+        self.viewuser.user_permissions.add(get_perm('add', Article))
         response = self.client.get(reverse('admin:admin_views_article_add'))
         self.assertContains(response, '<input type="submit" value="Save and view" name="_continue">')
         post = self.client.post(reverse('admin:admin_views_article_add'), add_dict, follow=False)
@@ -2062,8 +2060,7 @@ class AdminViewPermissionsTest(TestCase):
         self.assertNotContains(response, add_link_text)
         # Allow the user to add sections too. Now they can see the "add section" link.
         user = User.objects.get(username='adduser')
-        perm = get_perm(Section, get_permission_codename('add', Section._meta))
-        user.user_permissions.add(perm)
+        user.user_permissions.add(get_perm('add', Section))
         response = self.client.get(url)
         self.assertContains(response, add_link_text)
 
@@ -2084,8 +2081,7 @@ class AdminViewPermissionsTest(TestCase):
         self.assertNotContains(response, change_link_text)
         # Allow the user to change sections too. Now they can see the "change section" link.
         user = User.objects.get(username='adduser')
-        perm = get_perm(Section, get_permission_codename('change', Section._meta))
-        user.user_permissions.add(perm)
+        user.user_permissions.add(get_perm('change', Section))
         response = self.client.get(url)
         self.assertTrue(get_change_related(response))
         self.assertContains(response, change_link_text)
@@ -2107,8 +2103,7 @@ class AdminViewPermissionsTest(TestCase):
         self.assertNotContains(response, delete_link_text)
         # Allow the user to delete sections too. Now they can see the "delete section" link.
         user = User.objects.get(username='adduser')
-        perm = get_perm(Section, get_permission_codename('delete', Section._meta))
-        user.user_permissions.add(perm)
+        user.user_permissions.add(get_perm('delete', Section))
         response = self.client.get(url)
         self.assertTrue(get_delete_related(response))
         self.assertContains(response, delete_link_text)
@@ -2143,9 +2138,8 @@ class AdminViewPermissionsTest(TestCase):
         """
         If a user has no module perms, the app list returns a 404.
         """
-        opts = Article._meta
         change_user = User.objects.get(username='changeuser')
-        permission = get_perm(Article, get_permission_codename('change', opts))
+        permission = get_perm('change', Article)
 
         self.client.force_login(self.changeuser)
 
@@ -2306,17 +2300,16 @@ class AdminViewProxyModelPermissionsTest(TestCase):
         cls.deleteuser = User.objects.create_user(username='deleteuser', password='secret', is_staff=True)
 
         # Setup permissions, for our users who can add, change, and delete.
-        opts = UserProxy._meta
 
         # User who can view UserProxys
-        cls.viewuser.user_permissions.add(get_perm(UserProxy, get_permission_codename('view', opts)))
+        cls.viewuser.user_permissions.add(get_perm('view', UserProxy))
         # User who can add UserProxys
-        cls.adduser.user_permissions.add(get_perm(UserProxy, get_permission_codename('add', opts)))
+        cls.adduser.user_permissions.add(get_perm('add', UserProxy))
         # User who can change UserProxys
-        cls.changeuser.user_permissions.add(get_perm(UserProxy, get_permission_codename('change', opts)))
+        cls.changeuser.user_permissions.add(get_perm('change', UserProxy))
 
         # User who can delete UserProxys
-        cls.deleteuser.user_permissions.add(get_perm(UserProxy, get_permission_codename('delete', opts)))
+        cls.deleteuser.user_permissions.add(get_perm('delete', UserProxy))
 
         # login POST dicts
         cls.index_url = reverse('admin:index')
@@ -2386,7 +2379,7 @@ class AdminViewsNoUrlTest(TestCase):
     def setUpTestData(cls):
         # User who can change Reports
         cls.changeuser = User.objects.create_user(username='changeuser', password='secret', is_staff=True)
-        cls.changeuser.user_permissions.add(get_perm(Report, get_permission_codename('change', Report._meta)))
+        cls.changeuser.user_permissions.add(get_perm('change', Report))
 
     def test_no_standard_modeladmin_urls(self):
         """Admin index views don't break when user's ModelAdmin removes standard urls"""
@@ -2467,7 +2460,7 @@ class AdminViewDeletedObjectsTest(TestCase):
     def test_perms_needed(self):
         self.client.logout()
         delete_user = User.objects.get(username='deleteuser')
-        delete_user.user_permissions.add(get_perm(Plot, get_permission_codename('delete', Plot._meta)))
+        delete_user.user_permissions.add(get_perm('delete', Plot))
 
         self.client.force_login(self.deleteuser)
         response = self.client.get(reverse('admin:admin_views_plot_delete', args=(self.pl1.pk,)))
@@ -3983,8 +3976,8 @@ class AdminInlineTests(TestCase):
             username='permissionuser', password='secret',
             email='vuser@example.com', is_staff=True,
         )
-        permissionuser.user_permissions.add(get_perm(Collector, get_permission_codename('view', Collector._meta)))
-        permissionuser.user_permissions.add(get_perm(Widget, get_permission_codename('view', Widget._meta)))
+        permissionuser.user_permissions.add(get_perm('view', Collector))
+        permissionuser.user_permissions.add(get_perm('view', Widget))
         self.client.force_login(permissionuser)
         # Without add permission, a new inline can't be added.
         self.post_data['widget_set-0-name'] = 'Widget 1'
@@ -3993,7 +3986,7 @@ class AdminInlineTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Widget.objects.count(), 0)
         # But after adding the permisson it can.
-        permissionuser.user_permissions.add(get_perm(Widget, get_permission_codename('add', Widget._meta)))
+        permissionuser.user_permissions.add(get_perm('add', Widget))
         self.post_data['widget_set-0-name'] = "Widget 1"
         collector_url = reverse('admin:admin_views_collector_change', args=(self.collector.pk,))
         response = self.client.post(collector_url, self.post_data)
@@ -4010,8 +4003,8 @@ class AdminInlineTests(TestCase):
         self.assertEqual(Widget.objects.count(), 1)
         self.assertEqual(Widget.objects.first().name, 'Widget 1')
         # Now adding the change permission and editing works.
-        permissionuser.user_permissions.remove(get_perm(Widget, get_permission_codename('add', Widget._meta)))
-        permissionuser.user_permissions.add(get_perm(Widget, get_permission_codename('change', Widget._meta)))
+        permissionuser.user_permissions.remove(get_perm('add', Widget))
+        permissionuser.user_permissions.add(get_perm('change', Widget))
         self.post_data['widget_set-INITIAL_FORMS'] = '1'
         self.post_data['widget_set-0-id'] = str(widget_id)
         self.post_data['widget_set-0-name'] = 'Widget 1 Updated'
