@@ -188,6 +188,14 @@ class ProxyModelTests(TestCase):
         from django.contrib.auth.models import Permission
         Permission.objects.get(name="May display users information")
 
+    def test_permission_with_correct_content_type_created(self):
+        from django.contrib.auth.models import Permission
+        try:
+            Permission.objects.get(content_type__model='authuserproxy',
+                                   codename='add_authuserproxy')
+        except Permission.DoesNotExist:
+            self.fail("There's no 'add_authuserproxy' permission associated with the AuthUserProxy model")
+
     def test_proxy_model_signals(self):
         """
         Test save signals for proxy models

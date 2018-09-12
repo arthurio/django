@@ -4,6 +4,7 @@ they will take data directly from the table of their base class table rather
 than using a new table of their own. This allows them to act as simple proxies,
 providing a modified interface to the data from the base class.
 """
+from django.contrib.auth.models import User as AuthUser
 from django.db import models
 
 # A couple of managers for testing managing overriding in proxy model cases.
@@ -203,5 +204,15 @@ class Improvement(Issue):
 
 
 class ProxyImprovement(Improvement):
+    class Meta:
+        proxy = True
+
+
+class AuthUserProxy(AuthUser):
+    """
+    Model for #11154.
+    A proxy model with a different app_label than the concrete model should
+    have permissions using its own content type.
+    """
     class Meta:
         proxy = True
