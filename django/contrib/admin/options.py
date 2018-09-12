@@ -463,8 +463,7 @@ class BaseModelAdmin(metaclass=forms.MediaDefiningClass):
 
         return False
 
-    def _user_has_perm(self, user, action):
-        opts = self.opts
+    def _user_has_perm(self, user, action, opts):
         app_label = get_permission_app_label(opts)
         codename = get_permission_codename(action, opts)
         return user.has_perm("%s.%s" % (app_label, codename))
@@ -474,7 +473,7 @@ class BaseModelAdmin(metaclass=forms.MediaDefiningClass):
         Return True if the given request has permission to add an object.
         Can be overridden by the user in subclasses.
         """
-        return self._user_has_perm(request.user, 'add')
+        return self._user_has_perm(request.user, 'add', self.opts)
 
     def has_change_permission(self, request, obj=None):
         """
@@ -487,7 +486,7 @@ class BaseModelAdmin(metaclass=forms.MediaDefiningClass):
         model instance. If `obj` is None, this should return True if the given
         request has permission to change *any* object of the given type.
         """
-        return self._user_has_perm(request.user, 'change')
+        return self._user_has_perm(request.user, 'change', self.opts)
 
     def has_delete_permission(self, request, obj=None):
         """
@@ -500,7 +499,7 @@ class BaseModelAdmin(metaclass=forms.MediaDefiningClass):
         model instance. If `obj` is None, this should return True if the given
         request has permission to delete *any* object of the given type.
         """
-        return self._user_has_perm(request.user, 'delete')
+        return self._user_has_perm(request.user, 'delete', self.opts)
 
     def has_view_permission(self, request, obj=None):
         """
@@ -514,8 +513,8 @@ class BaseModelAdmin(metaclass=forms.MediaDefiningClass):
         any object of the given type.
         """
         return (
-            self._user_has_perm(request.user, 'view') or
-            self._user_has_perm(request.user, 'change')
+            self._user_has_perm(request.user, 'view', self.opts) or
+            self._user_has_perm(request.user, 'change', self.opts)
         )
 
     def has_view_or_change_permission(self, request, obj=None):
@@ -2149,8 +2148,8 @@ class InlineModelAdmin(BaseModelAdmin):
                     break
 
             return (
-                self._user_has_perm(request.user, 'view') or
-                self._user_has_perm(request.user, 'change')
+                self._user_has_perm(request.user, 'view', opts) or
+                self._user_has_perm(request.user, 'change', opts)
             )
         return super().has_view_permission(request)
 
