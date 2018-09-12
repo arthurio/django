@@ -24,7 +24,9 @@ from django.contrib.admin.views.autocomplete import AutocompleteJsonView
 from django.contrib.admin.widgets import (
     AutocompleteSelect, AutocompleteSelectMultiple,
 )
-from django.contrib.auth import get_permission_app_label, get_permission_codename
+from django.contrib.auth import (
+    get_permission_app_label, get_permission_codename,
+)
 from django.core.exceptions import (
     FieldDoesNotExist, FieldError, PermissionDenied, ValidationError,
 )
