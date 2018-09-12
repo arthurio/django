@@ -192,6 +192,7 @@ class ProxyModelTests(TestCase):
         from django.contrib.auth.models import Permission
         try:
             Permission.objects.get(content_type__model='authuserproxy',
+                                   content_type__app_label='proxy_models',
                                    codename='add_authuserproxy')
         except Permission.DoesNotExist:
             self.fail("There's no 'add_authuserproxy' permission associated with the AuthUserProxy model")
