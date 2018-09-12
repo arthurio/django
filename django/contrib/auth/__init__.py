@@ -216,6 +216,17 @@ def get_permission_codename(action, opts):
     return '%s_%s' % (action, opts.model_name)
 
 
+def get_permission_natural_key(action, Model):
+    """
+    Return a tuple matching the parameters of  `Permission.objects.get_by_natural_key`.
+    """
+    opts = Model._meta
+    codename = get_permission_codename(action, opts)
+    app_label = get_permission_app_label(opts)
+    model = opts.model_name
+    return (codename, app_label, model)
+
+
 def update_session_auth_hash(request, user):
     """
     Updating a user's password logs out all sessions for the user.
