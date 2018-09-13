@@ -13,7 +13,7 @@ from django.urls import reverse
 
 from .admin import admin as force_admin_model_registration  # NOQA
 from .models import (
-    AuthUserProxy, Abstract, BaseUser, Bug, Country, Improvement, Issue,
+    Abstract, AuthUserProxy, BaseUser, Bug, Country, Improvement, Issue,
     LowerStatusPerson, MultiUserProxy, MyPerson, MyPersonProxy, OtherPerson,
     Person, ProxyBug, ProxyImprovement, ProxyProxyBug, ProxyTrackerUser, State,
     StateProxy, StatusPerson, TrackerUser, User, UserProxy, UserProxyProxy,
