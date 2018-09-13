@@ -2142,7 +2142,7 @@ class InlineModelAdmin(BaseModelAdmin):
             model = self.model
             # The model was auto-created as intermediary for a many-to-many
             # Many-relationship; find the target model.
-            for field in opts.fields:
+            for field in self.opts.fields:
                 if field.remote_field and field.remote_field.model != self.parent_model:
                     model = field.remote_field.model
                     break
