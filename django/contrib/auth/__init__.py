@@ -201,30 +201,33 @@ def get_user(request):
     return user or AnonymousUser()
 
 
-def get_permission_app_label(opts):
+def get_permission_app_label(Model):
     """
     Return the app_label of the permission for the specified model options.
-    Proxy models use the content type of the concrete model.
     """
-    return opts.app_label
+    return Model._meta.app_label
 
 
-def get_permission_codename(action, opts):
+def get_permission_codename(action, Model):
     """
     Return the codename of the permission for the specified action.
     """
+    if hasattr(Model, '_meta'):
+        opts = Model._meta
+    else:
+        # TODO(arthurio): Throw some sort of DeprecationWarning for the method
+        #                 signature change
+        opts = Model
     return '%s_%s' % (action, opts.model_name)
 
 
-def get_permission_natural_key(action, Model):
+def get_permission_natural_key_string(action, Model):
     """
-    Return a tuple matching the parameters of  `Permission.objects.get_by_natural_key`.
+    Return the permission natural_key string to use in `user.has_perm` and `user.has_perms`.
     """
-    opts = Model._meta
-    codename = get_permission_codename(action, opts)
-    app_label = get_permission_app_label(opts)
-    model = opts.model_name
-    return (codename, app_label, model)
+    codename = get_permission_codename(action, Model)
+    app_label = get_permission_app_label(Model)
+    return '%s.%s' % (app_label, codename)
 
 
 def update_session_auth_hash(request, user):
