@@ -14,7 +14,9 @@ from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.contrib.admin.tests import AdminSeleniumTestCase
 from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import IS_POPUP_VAR
-from django.contrib.auth import REDIRECT_FIELD_NAME, get_permission_natural_key
+from django.contrib.auth import (
+    REDIRECT_FIELD_NAME, get_permission_app_label, get_permission_codename,
+)
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
@@ -1370,8 +1372,10 @@ class CustomModelAdminTest(AdminViewBasicTestCase):
 
 
 def get_perm(action, Model):
-    """Return the permission object, for the Model"""
-    return Permission.objects.get_by_natural_key(*get_permission_natural_key(action, Model))
+    codename = get_permission_codename(action, Model)
+    app_label = get_permission_app_label(Model)
+    model = Model._meta.model_name
+    return Permission.objects.get_by_natural_key(codename, app_label, model)
 
 
 @override_settings(
