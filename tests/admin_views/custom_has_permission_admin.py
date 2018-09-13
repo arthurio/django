@@ -2,12 +2,12 @@
 A custom AdminSite for AdminViewPermissionsTest.test_login_has_permission().
 """
 from django.contrib import admin
-from django.contrib.auth import get_permission_codename
+from django.contrib.auth import get_permission_natural_key_string
 from django.contrib.auth.forms import AuthenticationForm
 
 from . import admin as base_admin, models
 
-PERMISSION_NAME = 'admin_views.%s' % get_permission_codename('change', models.Article._meta)
+PERMISSION_NAME = get_permission_natural_key_string('change', models.Article)
 
 
 class PermissionAdminAuthenticationForm(AuthenticationForm):
