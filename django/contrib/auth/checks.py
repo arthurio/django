@@ -104,9 +104,9 @@ def check_models_permissions(app_configs=None, **kwargs):
     permission_name_max_length = Permission._meta.get_field('name').max_length
     errors = []
 
-    for model in models:
-        opts = model._meta
-        builtin_permissions = dict(_get_builtin_permissions(opts))
+    for Model in models:
+        builtin_permissions = dict(_get_builtin_permissions(Model))
+        opts = Model._meta
         # Check builtin permission name length.
         max_builtin_permission_name_length = (
             max(len(name) for name in builtin_permissions.values())
@@ -122,7 +122,7 @@ def check_models_permissions(app_configs=None, **kwargs):
                     "for its builtin permission names to be at most %d characters." % (
                         opts.app_label, opts.object_name, verbose_name_max_length, permission_name_max_length
                     ),
-                    obj=model,
+                    obj=Model,
                     id='auth.E007',
                 )
             )
@@ -135,7 +135,7 @@ def check_models_permissions(app_configs=None, **kwargs):
                         "The permission named '%s' of model '%s.%s' is longer than %d characters." % (
                             name, opts.app_label, opts.object_name, permission_name_max_length
                         ),
-                        obj=model,
+                        obj=Model,
                         id='auth.E008',
                     )
                 )
@@ -147,7 +147,7 @@ def check_models_permissions(app_configs=None, **kwargs):
                         "for model '%s.%s'." % (
                             codename, opts.app_label, opts.object_name
                         ),
-                        obj=model,
+                        obj=Model,
                         id='auth.E005',
                     )
                 )
@@ -157,7 +157,7 @@ def check_models_permissions(app_configs=None, **kwargs):
                         "The permission codenamed '%s' is duplicated for model '%s.%s'." % (
                             codename, opts.app_label, opts.object_name
                         ),
-                        obj=model,
+                        obj=Model,
                         id='auth.E006',
                     )
                 )
