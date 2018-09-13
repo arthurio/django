@@ -16,6 +16,7 @@ from django.contrib.admin.utils import quote
 from django.contrib.admin.views.main import IS_POPUP_VAR
 from django.contrib.auth import (
     REDIRECT_FIELD_NAME, get_permission_app_label, get_permission_codename,
+    get_permission_model,
 )
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
@@ -1374,7 +1375,7 @@ class CustomModelAdminTest(AdminViewBasicTestCase):
 def get_perm(action, Model):
     codename = get_permission_codename(action, Model)
     app_label = get_permission_app_label(Model)
-    model = Model._meta.model_name
+    model = get_permission_model(Model)
     return Permission.objects.get_by_natural_key(codename, app_label, model)
 
 

@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.contrib.auth import (
+    get_permission_app_label, get_permission_codename, get_permission_model,
+)
 from django.contrib.auth.models import User as AuthUser
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks, management
@@ -10,10 +13,10 @@ from django.urls import reverse
 
 from .admin import admin as force_admin_model_registration  # NOQA
 from .models import (
-    Abstract, BaseUser, Bug, Country, Improvement, Issue, LowerStatusPerson,
-    MultiUserProxy, MyPerson, MyPersonProxy, OtherPerson, Person, ProxyBug,
-    ProxyImprovement, ProxyProxyBug, ProxyTrackerUser, State, StateProxy,
-    StatusPerson, TrackerUser, User, UserProxy, UserProxyProxy,
+    AuthUserProxy, Abstract, BaseUser, Bug, Country, Improvement, Issue,
+    LowerStatusPerson, MultiUserProxy, MyPerson, MyPersonProxy, OtherPerson,
+    Person, ProxyBug, ProxyImprovement, ProxyProxyBug, ProxyTrackerUser, State,
+    StateProxy, StatusPerson, TrackerUser, User, UserProxy, UserProxyProxy,
 )
 
 
@@ -190,10 +193,13 @@ class ProxyModelTests(TestCase):
 
     def test_permission_with_correct_content_type_created(self):
         from django.contrib.auth.models import Permission
+        model = get_permission_model(AuthUserProxy)
+        codename = get_permission_codename('add', AuthUserProxy)
+        app_label = get_permission_app_label(AuthUserProxy)
         try:
-            Permission.objects.get(content_type__model='authuserproxy',
-                                   content_type__app_label='proxy_models',
-                                   codename='add_authuserproxy')
+            Permission.objects.get(content_type__model=model,
+                                   content_type__app_label=app_label,
+                                   codename=codename)
         except Permission.DoesNotExist:
             self.fail("There's no 'add_authuserproxy' permission associated with the AuthUserProxy model")
 

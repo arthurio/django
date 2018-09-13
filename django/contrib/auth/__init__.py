@@ -213,12 +213,20 @@ def get_permission_codename(action, Model):
     Return the codename of the permission for the specified action.
     """
     if hasattr(Model, '_meta'):
-        opts = Model._meta
+        model = get_permission_model(Model)
     else:
         # TODO(arthurio): Throw some sort of DeprecationWarning for the method
         #                 signature change
         opts = Model
-    return '%s_%s' % (action, opts.model_name)
+        model = opts.model_name
+    return '%s_%s' % (action, model)
+
+
+def get_permission_model(Model):
+    """
+    Return the app_label of the permission for the specified model options.
+    """
+    return Model._meta.model_name
 
 
 def get_permission_natural_key_string(action, Model):
