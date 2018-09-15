@@ -250,7 +250,7 @@ in ``myapp``::
     from django.contrib.auth.models import Permission
     from django.contrib.contenttypes.models import ContentType
 
-    content_type = ContentType.objects.get_for_model(BlogPost)
+    content_type = ContentType.objects.get_for_permission_by_model(BlogPost)
     permission = Permission.objects.create(
         codename='can_publish',
         name='Can Publish Posts',
@@ -284,7 +284,7 @@ the user from the database. For example::
         # any permission check will cache the current set of permissions
         user.has_perm('myapp.change_blogpost')
 
-        content_type = ContentType.objects.get_for_model(BlogPost)
+        content_type = ContentType.objects.get_for_permission_by_model(BlogPost)
         permission = Permission.objects.get(
             codename='change_blogpost',
             content_type=content_type,
