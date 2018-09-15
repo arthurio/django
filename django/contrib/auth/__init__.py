@@ -1,11 +1,13 @@
 import inspect
 import re
+import warnings
 
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.middleware.csrf import rotate_token
 from django.utils.crypto import constant_time_compare
+from django.utils.deprecation import RemovedInDjango31Warning
 from django.utils.module_loading import import_string
 from django.utils.translation import LANGUAGE_SESSION_KEY
 
@@ -215,8 +217,11 @@ def get_permission_codename(action, Model):
     if hasattr(Model, '_meta'):
         model = get_permission_model(Model)
     else:
-        # TODO(arthurio): Throw some sort of DeprecationWarning for the method
-        #                 signature change
+        warnings.warn(
+            "Update %s.get_permission_codename() to receive a model class as "
+            "second argument instead of model options." % __name__,
+            RemovedInDjango31Warning,
+        )
         opts = Model
         model = opts.model_name
     return '%s_%s' % (action, model)
