@@ -89,7 +89,7 @@ class AuthContextProcessorTests(TestCase):
         u = User.objects.create_user(username='normal', password='secret')
         u.user_permissions.add(
             Permission.objects.get(
-                content_type=ContentType.objects.get_for_model(Permission),
+                content_type=ContentType.objects.get_for_permission_by_model(Permission),
                 codename='add_permission'))
         self.client.force_login(u)
         response = self.client.get('/auth_processor_perms/')
@@ -101,7 +101,7 @@ class AuthContextProcessorTests(TestCase):
         u = User.objects.create_user(username='normal', password='secret')
         u.user_permissions.add(
             Permission.objects.get(
-                content_type=ContentType.objects.get_for_model(Permission),
+                content_type=ContentType.objects.get_for_permission_by_model(Permission),
                 codename='add_permission'))
         self.client.login(username='normal', password='secret')
         response = self.client.get('/auth_processor_perm_in_perms/')

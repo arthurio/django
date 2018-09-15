@@ -73,7 +73,7 @@ class BaseModelBackendTest:
 
     def test_custom_perms(self):
         user = self.UserModel._default_manager.get(pk=self.user.pk)
-        content_type = ContentType.objects.get_for_model(Group)
+        content_type = ContentType.objects.get_for_permission_by_model(Group)
         perm = Permission.objects.create(name='test', content_type=content_type, codename='test')
         user.user_permissions.add(perm)
 
@@ -111,7 +111,7 @@ class BaseModelBackendTest:
     def test_has_no_object_perm(self):
         """Regressiontest for #12462"""
         user = self.UserModel._default_manager.get(pk=self.user.pk)
-        content_type = ContentType.objects.get_for_model(Group)
+        content_type = ContentType.objects.get_for_permission_by_model(Group)
         perm = Permission.objects.create(name='test', content_type=content_type, codename='test')
         user.user_permissions.add(perm)
 
@@ -128,7 +128,7 @@ class BaseModelBackendTest:
         backend = ModelBackend()
 
         user = self.UserModel._default_manager.get(pk=self.user.pk)
-        content_type = ContentType.objects.get_for_model(Group)
+        content_type = ContentType.objects.get_for_permission_by_model(Group)
         user_perm = Permission.objects.create(name='test', content_type=content_type, codename='test_user')
         group_perm = Permission.objects.create(name='test2', content_type=content_type, codename='test_group')
         user.user_permissions.add(user_perm)
@@ -154,7 +154,7 @@ class BaseModelBackendTest:
         backend = ModelBackend()
 
         user = self.UserModel._default_manager.get(pk=self.user.pk)
-        content_type = ContentType.objects.get_for_model(Group)
+        content_type = ContentType.objects.get_for_permission_by_model(Group)
         user_perm = Permission.objects.create(name='test', content_type=content_type, codename='test_user')
         group_perm = Permission.objects.create(name='test2', content_type=content_type, codename='test_group')
         user.user_permissions.add(user_perm)
@@ -516,7 +516,7 @@ class PermissionDeniedBackendTest(TestCase):
 
     @modify_settings(AUTHENTICATION_BACKENDS={'prepend': backend})
     def test_has_perm_denied(self):
-        content_type = ContentType.objects.get_for_model(Group)
+        content_type = ContentType.objects.get_for_permission_by_model(Group)
         perm = Permission.objects.create(name='test', content_type=content_type, codename='test')
         self.user1.user_permissions.add(perm)
 
@@ -525,7 +525,7 @@ class PermissionDeniedBackendTest(TestCase):
 
     @modify_settings(AUTHENTICATION_BACKENDS={'append': backend})
     def test_has_perm(self):
-        content_type = ContentType.objects.get_for_model(Group)
+        content_type = ContentType.objects.get_for_permission_by_model(Group)
         perm = Permission.objects.create(name='test', content_type=content_type, codename='test')
         self.user1.user_permissions.add(perm)
 
