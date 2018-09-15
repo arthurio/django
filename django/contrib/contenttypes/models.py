@@ -31,6 +31,12 @@ class ContentTypeManager(models.Manager):
         key = (opts.app_label, opts.model_name)
         return self._cache[self.db][key]
 
+    def get_for_permission_by_model(self, model):
+        """
+        Return the `ContentType` instance for a given model to lookup a `Permission`.
+        """
+        return self.get_for_model(model, for_concrete_model=False)
+
     def get_for_model(self, model, for_concrete_model=True):
         """
         Return the ContentType object for a given model, creating the
