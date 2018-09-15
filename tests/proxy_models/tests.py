@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import (
     get_permission_app_label, get_permission_codename, get_permission_model,
+    get_permission_natural_key_string,
 )
 from django.contrib.auth.models import User as AuthUser
 from django.contrib.contenttypes.models import ContentType
@@ -202,6 +203,21 @@ class ProxyModelTests(TestCase):
                                    codename=codename)
         except Permission.DoesNotExist:
             self.fail("There's no 'add_authuserproxy' permission associated with the AuthUserProxy model")
+
+    def test_get_permission_app_label(self):
+        app_label = get_permission_app_label(AuthUserProxy)
+        self.assertEqual(app_label, 'proxy_models')
+
+    def test_get_permission_codename(self):
+        codename = get_permission_codename('add', AuthUserProxy)
+        self.assertEqual(codename, 'add_authuserproxy')
+
+    def test_get_permission_model(self):
+        self.assertEqual(get_permission_model(AuthUserProxy), 'authuserproxy')
+
+    def test_get_permission_natural_key_string(self):
+        natural_key_string = get_permission_natural_key_string('add', AuthUserProxy)
+        self.assertEqual(natural_key_string, 'proxy_models.add_authuserproxy')
 
     def test_proxy_model_signals(self):
         """
