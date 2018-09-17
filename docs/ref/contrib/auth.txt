@@ -650,3 +650,27 @@ Utility functions
     :setting:`AUTHENTICATION_BACKENDS`, if a user isn't returned by the
     backend's ``get_user()`` method, or if the session auth hash doesn't
     validate.
+
+.. function:: get_permission_natural_key_string(action, Model)
+
+    .. versionadded:: 2.1.2
+
+    Returns the string used for permission checks of a Model, for a specific action.
+
+    Usage
+
+    .. code-block:: python
+        :caption: polls/views.py
+
+        from django.contrib.auth import get_permission_natural_key_string
+        from django.contrib.auth.decorators import permission_required
+
+
+        @permission_required(get_permission_natural_key_string('view', Poll))
+        def dashboard(request):
+            ...
+
+        def create_poll(request):
+            perm = get_permission_natural_key_string('add', Poll))
+            if user.has_perm(perm):
+                ...
