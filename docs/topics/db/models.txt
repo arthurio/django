@@ -1333,6 +1333,34 @@ containing the new managers and inherit that after the primary base class::
 You probably won't need to do this very often, but, when you do, it's
 possible.
 
+Another use case for Proxy models is to represent a subset of the concrete
+model they subclass. For example::
+
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.models import UserManager
+
+    class SaffUserManager(UserManager):
+        def get_queryset(self):
+            queryset = super(StaffUserManager)
+            return queryset.filter(is_staff=True)
+
+    class StaffUser(get_user_model()):
+        objects = StaffUserManager()
+
+        class Meta:
+            proxy = True
+
+    >>> User.objects.create(is_staff=False)
+    >>> User.objects.count()
+    1
+    >>> StaffUser.objects.count()
+    0
+    >>> User.objects.create(is_staff=True)
+    >>> User.objects.count()
+    2
+    >>> StaffUser.objects.count()
+    1
+
 .. _proxy-vs-unmanaged-models:
 
 Differences between proxy inheritance and unmanaged models
