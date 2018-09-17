@@ -58,9 +58,7 @@ Minor features
 :mod:`django.contrib.contenttypes`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* The new :meth:`.ContentTypeManager.get_for_permission_by_model` method allows
-  looking up the content type of a model used by the
-  :class:`~django.contrib.auth.models.Permission` model.
+* ...
 
 :mod:`django.contrib.gis`
 ~~~~~~~~~~~~~~~~~~~~~~~~~

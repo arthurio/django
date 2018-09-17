@@ -4,7 +4,27 @@ Django 2.1.2 release notes
 
 *Expected October 1, 2018*
 
-Django 2.1.2 fixes several bugs in 2.1.1
+Django 2.1.2 introduces three helper methods and one queryset method to interact
+ with permissions, and fixes several bugs in 2.1.1
+
+Interacting with Permissions
+============================
+
+* The new
+  ``django.contrib.auth.contentypes.models.ContentTypeManager.get_for_permission_by_model``
+  method allows looking up the content type of a model used by the
+  ``django.contrib.auth.models.Permission`` model.
+* The signature for ``django.contrib.auth.get_permission_codename`` has changed
+  to use a model class as second argument instead of its options.
+* The new ``django.contrib.auth.get_permission_model``,
+  ``django.contrib.auth.get_permission_app_label``, and
+  ``django.contrib.auth.get_permission_natural_key_string`` methods allow to
+  interact with the ``django.contrib.auth.models.Permission`` model, for a given
+  model.
+* The new ``django.contrib.auth.get_permission_natural_key_string`` method
+  allows to build the strings used by
+  ``django.contrib.auth.models.User.has_perm`` and
+  ``django.contrib.auth.models.User.has_perms``.
 
 Bugfixes
 ========
@@ -19,3 +39,5 @@ Bugfixes
   (:ticket:`29755`).
 
 * Added compatibility for ``cx_Oracle`` 7 (:ticket:`29759`).
+* Permissions for :ref:`proxy models <proxy-models>` will now be created using
+  their own content type (:ticket:`11154`, :ticket:`17904`).
