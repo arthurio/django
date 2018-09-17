@@ -1275,6 +1275,12 @@ extensions you included (that no other code is relying on anyway). It is not
 a way to replace the ``Person`` (or any other) model everywhere with something
 of your own creation.
 
+>>> Person.objects.create(first_name="foobar")
+>>> Person.objects.all()
+<QuerySet [<Person: foobar>]>
+>>> MyPerson.objects.all()
+<QuerySet [<MyPerson: foobar>]
+
 Base class restrictions
 ~~~~~~~~~~~~~~~~~~~~~~~
 
