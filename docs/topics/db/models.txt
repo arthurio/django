@@ -1223,6 +1223,47 @@ and ``OrderedPerson`` queries will be ordered by ``last_name``.
 Proxy models inherit ``Meta`` attributes :ref:`in the same way as regular
 models <meta-and-multi-table-inheritance>`.
 
+Proxy models don't inherit the permissions of the concrete model they subclass::
+
+    class Person(MyPerson):
+        class Meta:
+            proxy = True
+            # Custom permissions are not inherited
+            permissions = (('can_deliver_pizzas', 'Can deliver pizzas'),)
+
+.. code-block:: pycon
+
+    >>> from django.contrib.auth import get_permission_codename
+    >>> from django.contrib.contenttypes.models import ContentType
+
+    >>> from foobar.models import MyPerson, Person
+
+    >>> person_content_type = ContentType.objects.get_for_permission_by_model(Person)
+    >>> myperson_content_type = ContentType.objects.get_for_permission_by_model(MyPerson)
+
+    >>> change_person_codename = get_permission_codename('change', Person)
+    'change_person'
+    >>> change_myperson_codename = get_permission_codename('change', MyPerson)
+    'change_myperson'
+
+    >>> change_person_permission = Permission.objects.get(
+    ...     content_type=person_content_type,
+    ...     codename=change_person_codename,
+    ... )
+    >>> change_myperson_permission = Permission.objects.get(
+    ...     content_type=myperson_content_type,
+    ...     codename=change_myperson_codename,
+    ... )
+
+    >>> change_person_permission == change_myperson_permission
+    False
+
+    >>> permission_queryset = Permission.objects.filter(codename='can_deliver_pizzas')
+    >>> permission_queryset.filter(content_type=person_content_type).exists()
+    True
+    >>> permission_queryset.filter(content_type=myperson_content_type).exists()
+    False
+
 ``QuerySet``\s still return the model that was requested
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
