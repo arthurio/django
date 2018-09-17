@@ -273,6 +273,7 @@ example). If you are adding permissions and checking them immediately
 afterward, in a test or view for example, the easiest solution is to re-fetch
 the user from the database. For example::
 
+    from django.contrib.auth import get_permission_natural_key_string
     from django.contrib.auth.models import Permission, User
     from django.contrib.contenttypes.models import ContentType
     from django.shortcuts import get_object_or_404
@@ -291,15 +292,18 @@ the user from the database. For example::
         )
         user.user_permissions.add(permission)
 
+        # Build the permission string
+        change_perm = get_permission_natural_key_string('change', BlogPost)
+
         # Checking the cached permission set
-        user.has_perm('myapp.change_blogpost')  # False
+        user.has_perm(change_perm)  # False
 
         # Request new instance of User
         # Be aware that user.refresh_from_db() won't clear the cache.
         user = get_object_or_404(User, pk=user_id)
 
         # Permission cache is repopulated from the database
-        user.has_perm('myapp.change_blogpost')  # True
+        user.has_perm(change_perm)  # True
 
         ...
 
@@ -683,7 +687,9 @@ The ``permission_required`` decorator
     Just like the :meth:`~django.contrib.auth.models.User.has_perm` method,
     permission names take the form ``"<app label>.<permission codename>"``
     (i.e. ``polls.can_vote`` for a permission on a model in the ``polls``
-    application).
+    application). You can also use the
+    :meth:`~django.contrib.auth.get_permission_natural_key_string` to build the
+    permission string.
 
     The decorator may also take an iterable of permissions, in which case the
     user must have all of the permissions in order to access the view.
