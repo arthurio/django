@@ -39,5 +39,6 @@ Bugfixes
   (:ticket:`29755`).
 
 * Added compatibility for ``cx_Oracle`` 7 (:ticket:`29759`).
+
 * Permissions for :ref:`proxy models <proxy-models>` will now be created using
   their own content type (:ticket:`11154`, :ticket:`17904`).
