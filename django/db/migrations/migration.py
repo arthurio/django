@@ -1,3 +1,5 @@
+import pkgutil
+
 from django.db.transaction import atomic
 
 from .exceptions import IrreversibleError
@@ -191,3 +193,10 @@ class SwappableTuple(tuple):
 def swappable_dependency(value):
     """Turn a setting value into a dependency."""
     return SwappableTuple((value.split(".", 1)[0], "__first__"), value)
+
+
+def migration_names(module):
+    return {
+        name for _, name, is_pkg in pkgutil.iter_modules(module.__path__)
+        if not is_pkg and name[0] not in '_~'
+    }

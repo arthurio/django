@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.management.base import (
     BaseCommand, CommandError, no_translations,
 )
+from django.core.management.sql import emit_pre_makemigrations_signal
 from django.db import DEFAULT_DB_ALIAS, connections, router
 from django.db.migrations import Migration
 from django.db.migrations.autodetector import MigrationAutodetector
@@ -172,6 +173,9 @@ class Command(BaseCommand):
                 else:
                     self.stdout.write("No changes detected")
         else:
+            emit_pre_makemigrations_signal(
+                self.verbosity, self.interactive, connection.alias, changes=changes,
+            )
             self.write_migration_files(changes)
             if check_changes:
                 sys.exit(1)

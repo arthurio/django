@@ -6,7 +6,7 @@ import unicodedata
 
 from django.apps import apps as global_apps
 from django.contrib.auth import get_permission_codename
-from django.contrib.contenttypes.management import create_contenttypes
+# from django.contrib.contenttypes.management import create_contenttypes
 from django.core import exceptions
 from django.db import DEFAULT_DB_ALIAS, router
 
@@ -39,7 +39,7 @@ def create_permissions(app_config, verbosity=2, interactive=True, using=DEFAULT_
     # Ensure that contenttypes are created for this app. Needed if
     # 'django.contrib.auth' is in INSTALLED_APPS before
     # 'django.contrib.contenttypes'.
-    create_contenttypes(app_config, verbosity=verbosity, interactive=interactive, using=using, apps=apps, **kwargs)
+    # create_contenttypes(app_config, verbosity=verbosity, interactive=interactive, using=using, apps=apps, **kwargs)
 
     app_label = app_config.label
     try:

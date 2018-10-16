@@ -50,3 +50,15 @@ def emit_post_migrate_signal(verbosity, interactive, db, **kwargs):
             using=db,
             **kwargs
         )
+
+def emit_pre_makemigrations_signal(verbosity, interactive, db, changes):
+    for app_label, app_migrations in changes.items():
+        if verbosity >= 2:
+            print("Running pre-makemigrations handlers for %s" % app_label)
+
+        models.signals.pre_makemigrations.send(
+            sender=app_label,
+            app_label=app_label,
+            app_migrations=app_migrations,
+            using=db,
+        )

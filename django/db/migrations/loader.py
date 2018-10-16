@@ -1,4 +1,3 @@
-import pkgutil
 import sys
 from importlib import import_module, reload
 
@@ -11,6 +10,7 @@ from .exceptions import (
     AmbiguityError, BadMigrationError, InconsistentMigrationHistory,
     NodeNotFoundError,
 )
+from .migration import migration_names
 
 MIGRATIONS_MODULE_NAME = 'migrations'
 
@@ -97,12 +97,8 @@ class MigrationLoader:
                 if was_loaded:
                     reload(module)
             self.migrated_apps.add(app_config.label)
-            migration_names = {
-                name for _, name, is_pkg in pkgutil.iter_modules(module.__path__)
-                if not is_pkg and name[0] not in '_~'
-            }
             # Load migrations
-            for migration_name in migration_names:
+            for migration_name in migration_names(module):
                 migration_path = '%s.%s' % (module_name, migration_name)
                 try:
                     migration_module = import_module(migration_path)
