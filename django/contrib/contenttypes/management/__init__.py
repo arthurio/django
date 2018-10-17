@@ -136,6 +136,49 @@ def get_contenttypes_and_models(app_config, using, ContentType):
     return content_types, app_models
 
 
+def create_contenttypes(app_config, plan, verbosity=2, interactive=True,
+                        using=DEFAULT_DB_ALIAS, apps=global_apps, **kwargs):
+    """
+    Create content types for models in the given app.
+    """
+    if not app_config.models_module:
+        return
+
+    initial_migration_in_plan = False
+    for migration, __ in plan:
+        if migration.app_label == "contenttypes" and migration.name == "0001_initial":
+            initial_migration_in_plan = True
+            break
+
+    if not initial_migration_in_plan:
+        return
+
+    app_label = app_config.label
+
+    try:
+        app_config = apps.get_app_config(app_label)
+        ContentType = apps.get_model("contenttypes", "ContentType")
+    except LookupError:
+        return
+
+    content_types, app_models = get_contenttypes_and_models(
+        app_config, using, ContentType
+    )
+
+    if not app_models:
+        return
+
+    cts = [
+        ContentType(app_label=app_label, model=model_name)
+        for (model_name, model) in app_models.items()
+        if model_name not in content_types
+    ]
+    ContentType.objects.using(using).bulk_create(cts)
+    if verbosity >= 2:
+        for ct in cts:
+            print("Adding content type '%s | %s'" % (ct.app_label, ct.model))
+
+
 def inject_contenttypes_operations(app_label, app_migrations, using=DEFAULT_DB_ALIAS, **kwargs):
     try:
         ContentType = global_apps.get_model('contenttypes', 'ContentType')
