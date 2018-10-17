@@ -51,7 +51,7 @@ class RenameContentType(migrations.RunPython):
         )
 
 
-def create_contenttype(apps, schema_editor, app_label, model_name):
+def create_content_type(apps, schema_editor, app_label, model_name):
     ContentType = apps.get_model('contenttypes', 'ContentType')
     db = schema_editor.connection.alias
     if not router.allow_migrate_model(db, ContentType):
@@ -63,11 +63,11 @@ def create_contenttype(apps, schema_editor, app_label, model_name):
             model_name=model_name,
         )
     except IntegrityError:
-        # Do something about it?
+        # XXX(arthurio): Do something about it?
         pass
 
 
-def delete_contenttype(apps, schema_editor, app_label, model_name):
+def delete_content_type(apps, schema_editor, app_label, model_name):
     ContentType = apps.get_model('contenttypes', 'ContentType')
     db = schema_editor.connection.alias
     if not router.allow_migrate_model(db, ContentType):
@@ -80,7 +80,7 @@ def delete_contenttype(apps, schema_editor, app_label, model_name):
         ).delete()
         ContentType.objects.clear_cache()
     except ContentType.DoesNotExist:
-        # Do something about it?
+        # XXX(arthurio): Do something about it?
         pass
 
 
@@ -89,7 +89,7 @@ class CreateContentType(migrations.RunPython):
     def __init__(self, app_label, model_name):
         self.app_label = app_label
         self.model_name = model_name
-        super().__init__(create_contenttype, delete_contenttype)
+        super().__init__(create_content_type, delete_content_type)
 
     def describe(self):
         return "Create content type {}.{}".format(
@@ -113,7 +113,7 @@ class DeleteContentType(migrations.RunPython):
     def __init__(self, app_label, model_name):
         self.app_label = app_label
         self.model_name = model_name
-        super().__init__(delete_contenttype, create_contenttype)
+        super().__init__(delete_content_type, create_content_type)
 
     def describe(self):
         return "Delete content type {}.{}".format(
@@ -139,7 +139,7 @@ def get_contenttypes_and_models(app_config, using, ContentType):
     return content_types, app_models
 
 
-def inject_contenttypes_migrations(app_label, app_migrations, using=DEFAULT_DB_ALIAS, **kwargs):
+def inject_contenttypes_operations(app_label, app_migrations, using=DEFAULT_DB_ALIAS, **kwargs):
     try:
         ContentType = global_apps.get_model('contenttypes', 'ContentType')
     except LookupError:
@@ -151,32 +151,32 @@ def inject_contenttypes_migrations(app_label, app_migrations, using=DEFAULT_DB_A
     for migration in app_migrations:
         inserts = []
 
-        contenttypes_operation_inserted = False
+        contenttypes_operations_inserted = False
         for index, operation in enumerate(migration.operations):
-            contenttype_operation = None
+            contenttypes_operation = None
             if isinstance(operation, migrations.RenameModel):
-                contenttype_operation = RenameContentType(
+                contenttypes_operation = RenameContentType(
                     migration.app_label, operation.old_name_lower, operation.new_name_lower,
                 )
 
             if isinstance(operation, migrations.CreateModel):
-                contenttype_operation = CreateContentType(
+                contenttypes_operation = CreateContentType(
                     migration.app_label, operation.name_lower,
                 )
 
             if isinstance(operation, migrations.DeleteModel):
-                contenttype_operation = DeleteContentType(
+                contenttypes_operation = DeleteContentType(
                     migration.app_label, operation.name_lower,
                 )
 
-            if contenttype_operation:
-                inserts.append((index + 1, contenttype_operation))
-                contenttypes_operation_inserted = True
+            if contenttypes_operation:
+                inserts.append((index + 1, contenttypes_operation))
+                contenttypes_operations_inserted = True
 
         for inserted, (index, operation) in enumerate(inserts):
             migration.operations.insert(inserted + index, operation)
 
-        if contenttypes_operation_inserted:
+        if contenttypes_operations_inserted:
             last_migration = sorted(migration_names(contenttypes.migrations), reverse=True)[0]
             migration.dependencies.append(('contenttypes', last_migration))
-            # TODO(arthurio): Emit post_insert_contenttypes_operation
+            # TODO(arthurio): Emit post_insert_contenttypes_operations
