@@ -140,7 +140,6 @@ def get_contenttypes_and_models(app_config, using, ContentType):
 
 
 def inject_contenttypes_migrations(app_label, app_migrations, using=DEFAULT_DB_ALIAS, **kwargs):
-    # Determine whether or not the ContentType model is available.
     try:
         ContentType = global_apps.get_model('contenttypes', 'ContentType')
     except LookupError:
