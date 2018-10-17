@@ -136,12 +136,15 @@ def get_contenttypes_and_models(app_config, using, ContentType):
     return content_types, app_models
 
 
-def create_contenttypes(app_config, plan, verbosity=2, interactive=True,
+def create_contenttypes(app_config, plan=None, verbosity=2, interactive=True,
                         using=DEFAULT_DB_ALIAS, apps=global_apps, **kwargs):
     """
     Create content types for models in the given app.
     """
     if not app_config.models_module:
+        return
+
+    if not plan:
         return
 
     initial_migration_in_plan = False
