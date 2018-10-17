@@ -51,45 +51,42 @@ class RenameContentType(migrations.RunPython):
         )
 
 
-def create_content_type(apps, schema_editor, app_label, model_name):
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    db = schema_editor.connection.alias
-    if not router.allow_migrate_model(db, ContentType):
-        return
+class CreateOrDeleteContentTypeMixin:
+    def create_content_type(self, apps, schema_editor):
+        ContentType = apps.get_model("contenttypes", "ContentType")
+        db = schema_editor.connection.alias
+        if not router.allow_migrate_model(db, ContentType):
+            return
 
-    try:
-        ContentType.objects.db_manager(db).create(
-            app_label=app_label,
-            model_name=model_name,
-        )
-    except IntegrityError:
-        # XXX(arthurio): Do something about it?
-        pass
+        try:
+            ContentType.objects.db_manager(db).create(
+                app_label=self.app_label, model=self.model_name
+            )
+        except IntegrityError:
+            # XXX(arthurio): Do something about it?
+            pass
 
+    def delete_content_type(self, apps, schema_editor):
+        ContentType = apps.get_model("contenttypes", "ContentType")
+        db = schema_editor.connection.alias
+        if not router.allow_migrate_model(db, ContentType):
+            return
 
-def delete_content_type(apps, schema_editor, app_label, model_name):
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    db = schema_editor.connection.alias
-    if not router.allow_migrate_model(db, ContentType):
-        return
-
-    try:
-        ContentType.objects.db_manager(db).get(
-            app_label=app_label,
-            model_name=model_name,
-        ).delete()
-        ContentType.objects.clear_cache()
-    except ContentType.DoesNotExist:
-        # XXX(arthurio): Do something about it?
-        pass
+        try:
+            ContentType.objects.db_manager(db).get(
+                app_label=self.app_label, model=self.model_name
+            ).delete()
+            ContentType.objects.clear_cache()
+        except ContentType.DoesNotExist:
+            # XXX(arthurio): Do something about it?
+            pass
 
 
-class CreateContentType(migrations.RunPython):
-
+class CreateContentType(migrations.RunPython, CreateOrDeleteContentTypeMixin):
     def __init__(self, app_label, model_name):
         self.app_label = app_label
         self.model_name = model_name
-        super().__init__(create_content_type, delete_content_type)
+        super().__init__(self.create_content_type, self.delete_content_type)
 
     def describe(self):
         return "Create content type {}.{}".format(
@@ -109,11 +106,11 @@ class CreateContentType(migrations.RunPython):
         )
 
 
-class DeleteContentType(migrations.RunPython):
+class DeleteContentType(migrations.RunPython, CreateOrDeleteContentTypeMixin):
     def __init__(self, app_label, model_name):
         self.app_label = app_label
         self.model_name = model_name
-        super().__init__(delete_content_type, create_content_type)
+        super().__init__(self.delete_content_type, self.create_content_type)
 
     def describe(self):
         return "Delete content type {}.{}".format(
