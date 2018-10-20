@@ -125,8 +125,8 @@ class Migration:
                 operation.database_forwards(self.app_label, schema_editor, old_state, project_state)
             return (old_state, project_state)
 
-        def _apply_operations(operations, depth=50):
-            if not operations or depth <= 0:
+        def _apply_operations(operations):
+            if not operations:
                 return
 
             injected_operations = []
@@ -140,9 +140,14 @@ class Migration:
                     injected_operations=injected_operations,
                 )
 
-            _apply_operations(injected_operations, depth - 1)
+            _apply_operations(injected_operations)
 
-        _apply_operations(self.operations)
+        try:
+            _apply_operations(self.operations)
+        except RecursionError:
+            raise RecursionError(
+                "A cycle in the post_operation signal's chain has caused infinite recursion."
+            )
 
         return project_state
 
