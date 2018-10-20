@@ -132,11 +132,12 @@ class Migration:
             injected_operations = []
             for operation in operations:
                 from_state, to_state = _apply_operation(operation)
-                injected_operations += emit_post_operation_signal(
+                emit_post_operation_signal(
                     migration=self,
                     operation=operation,
                     from_state=from_state,
                     to_state=to_state,
+                    injected_operations=injected_operations,
                 )
 
             _apply_operations(injected_operations, depth - 1)

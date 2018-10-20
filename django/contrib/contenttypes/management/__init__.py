@@ -42,10 +42,12 @@ class RenameContentType(migrations.RunPython):
         self._rename(apps, schema_editor, self.new_model, self.old_model)
 
 
-def inject_rename_contenttypes_operations(migration, operation, from_state, to_state, **kwargs):
+def inject_rename_contenttypes_operations(migration, operation, from_state, to_state, injected_operations, **kwargs):
     if isinstance(operation, migrations.RenameModel):
-        return RenameContentType(
-            migration.app_label, operation.old_name_lower, operation.new_name_lower
+        injected_operations.append(
+            RenameContentType(
+                migration.app_label, operation.old_name_lower, operation.new_name_lower
+            )
         )
 
 
