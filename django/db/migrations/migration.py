@@ -1,3 +1,4 @@
+from django.core.management.sql import emit_post_operation_signal
 from django.db.transaction import atomic
 
 from .exceptions import IrreversibleError
@@ -96,7 +97,7 @@ class Migration:
         Return the resulting project state for efficient reuse by following
         Migrations.
         """
-        for operation in self.operations:
+        def _apply_operation(operation):
             # If this operation cannot be represented as SQL, place a comment
             # there instead
             if collect_sql:
@@ -108,7 +109,7 @@ class Migration:
                 schema_editor.collected_sql.append("-- %s" % operation.describe())
                 schema_editor.collected_sql.append("--")
                 if not operation.reduces_to_sql:
-                    continue
+                    return (project_state, project_state)
             # Save the state before the operation has run
             old_state = project_state.clone()
             operation.state_forwards(self.app_label, project_state)
@@ -122,6 +123,26 @@ class Migration:
             else:
                 # Normal behaviour
                 operation.database_forwards(self.app_label, schema_editor, old_state, project_state)
+            return (old_state, project_state)
+
+        def _apply_operations(operations, depth=50):
+            if not operations or depth <= 0:
+                return
+
+            injected_operations = []
+            for operation in operations:
+                from_state, to_state = _apply_operation(operation)
+                injected_operations += emit_post_operation_signal(
+                    migration=self,
+                    operation=operation,
+                    from_state=from_state,
+                    to_state=to_state,
+                )
+
+            _apply_operations(injected_operations, depth - 1)
+
+        _apply_operations(self.operations)
+
         return project_state
 
     def unapply(self, project_state, schema_editor, collect_sql=False):

@@ -50,3 +50,14 @@ def emit_post_migrate_signal(verbosity, interactive, db, **kwargs):
             using=db,
             **kwargs
         )
+
+
+def emit_post_operation_signal(migration, operation, from_state, to_state, **kwargs):
+    results = models.signals.post_operation.send(
+        sender=operation.__class__,
+        migration=migration,
+        operation=operation,
+        from_state=from_state,
+        to_state=to_state,
+    )
+    return [operation for __, operation in results if operation]
