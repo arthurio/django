@@ -129,17 +129,15 @@ class Migration:
             if not operations:
                 return
 
-            injected_operations = []
             for operation in operations:
                 from_state, to_state = _apply_operation(operation)
-                injected_operations += emit_post_operation_signal(
+                injected_operations = emit_post_operation_signal(
                     migration=self,
                     operation=operation,
                     from_state=from_state,
                     to_state=to_state,
                 )
-
-            _apply_operations(injected_operations)
+                _apply_operations(injected_operations)
 
         try:
             _apply_operations(self.operations)
