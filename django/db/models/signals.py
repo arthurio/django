@@ -51,4 +51,4 @@ m2m_changed = ModelSignal(
 
 pre_migrate = Signal(providing_args=["app_config", "verbosity", "interactive", "using", "apps", "plan"])
 post_migrate = Signal(providing_args=["app_config", "verbosity", "interactive", "using", "apps", "plan"])
-post_operation = Signal(providing_args=["migration", "operation", "from_state", "to_state", "injected_operations"])
+post_operation = Signal(providing_args=["migration", "operation", "from_state", "to_state"])
