@@ -1,3 +1,5 @@
+from itertools import chain
+
 from django.apps import apps
 from django.db import models
 
@@ -53,11 +55,13 @@ def emit_post_migrate_signal(verbosity, interactive, db, **kwargs):
 
 
 def emit_post_operation_signal(migration, operation, from_state, to_state, **kwargs):
-    results = models.signals.post_operation.send(
+    responses = models.signals.post_operation.send(
         sender=operation.__class__,
         migration=migration,
         operation=operation,
         from_state=from_state,
         to_state=to_state,
     )
-    return [operation for __, operation in results if operation]
+    return chain.from_iterable(
+        operations for __, operations in responses if operations
+    )
