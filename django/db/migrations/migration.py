@@ -94,6 +94,10 @@ class Migration:
         and a schema_editor for a live database and apply the migration
         in a forwards order.
 
+        For each operation, emit a post_operation signal and collect the
+        injected operations to be applied recursively using an in-order
+        traversal (LNR) approach.
+
         Return the resulting project state for efficient reuse by following
         Migrations.
         """
@@ -155,6 +159,10 @@ class Migration:
         Take a project_state representing all migrations prior to this one
         and a schema_editor for a live database and apply the migration
         in a reverse order.
+
+        For each operation, the injected operations from post_operation signal
+        receivers are collected recursively, using an in-order traversal (LNR)
+        approach.
 
         The backwards migration process consists of two phases:
 
