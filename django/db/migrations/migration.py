@@ -163,18 +163,39 @@ class Migration:
         """
         # Construct all the intermediate states we need for a reverse migration
         to_run = []
-        new_state = project_state
+
         # Phase 1
-        for operation in self.operations:
-            # If it's irreversible, error out
-            if not operation.reversible:
-                raise IrreversibleError("Operation %s in %s is not reversible" % (operation, self))
-            # Preserve new state from previous run to not tamper the same state
-            # over all operations
-            new_state = new_state.clone()
-            old_state = new_state.clone()
-            operation.state_forwards(self.app_label, new_state)
-            to_run.insert(0, (operation, old_state, new_state))
+        def _collect_operations(operations, project_state):
+            if not operations:
+                return
+
+            for operation in operations:
+                # If it's irreversible, error out
+                if not operation.reversible:
+                    raise IrreversibleError("Operation %s in %s is not reversible" % (operation, self))
+                # Preserve new state from previous run to not tamper the same state
+                # over all operations
+                new_state = project_state.clone()
+                old_state = project_state.clone()
+                operation.state_forwards(self.app_label, new_state)
+                to_run.insert(0, (operation, old_state, new_state))
+
+                # Insert injected operations from post_operation signal receivers.
+                injected_operations = emit_post_operation_signal(
+                    migration=self,
+                    operation=operation,
+                    from_state=old_state,
+                    to_state=new_state,
+                )
+
+                _collect_operations(injected_operations, new_state)
+
+        try:
+            _collect_operations(self.operations, project_state)
+        except RecursionError:
+            raise RecursionError(
+                "A cycle in the post_operation signal's chain has caused infinite recursion."
+            )
 
         # Phase 2
         for operation, to_state, from_state in to_run:
