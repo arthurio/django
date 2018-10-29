@@ -1,3 +1,4 @@
+from django.core.management.sql import emit_post_operation_signal
 from django.db.transaction import atomic
 
 from .exceptions import IrreversibleError
@@ -93,10 +94,18 @@ class Migration:
         and a schema_editor for a live database and apply the migration
         in a forwards order.
 
+        For each operation, emit a post_operation signal and collect the
+        injected operations to be applied recursively using an in-order
+        traversal (LNR) approach.
+
         Return the resulting project state for efficient reuse by following
         Migrations.
         """
-        for operation in self.operations:
+        def _apply_operation(operation):
+            # Save the state before the operation has run
+            from_state = project_state.clone()
+            to_state = project_state
+
             # If this operation cannot be represented as SQL, place a comment
             # there instead
             if collect_sql:
@@ -108,20 +117,41 @@ class Migration:
                 schema_editor.collected_sql.append("-- %s" % operation.describe())
                 schema_editor.collected_sql.append("--")
                 if not operation.reduces_to_sql:
-                    continue
-            # Save the state before the operation has run
-            old_state = project_state.clone()
-            operation.state_forwards(self.app_label, project_state)
+                    return (from_state, to_state)
+            operation.state_forwards(self.app_label, to_state)
             # Run the operation
             atomic_operation = operation.atomic or (self.atomic and operation.atomic is not False)
             if not schema_editor.atomic_migration and atomic_operation:
                 # Force a transaction on a non-transactional-DDL backend or an
                 # atomic operation inside a non-atomic migration.
                 with atomic(schema_editor.connection.alias):
-                    operation.database_forwards(self.app_label, schema_editor, old_state, project_state)
+                    operation.database_forwards(self.app_label, schema_editor, from_state, to_state)
             else:
                 # Normal behaviour
-                operation.database_forwards(self.app_label, schema_editor, old_state, project_state)
+                operation.database_forwards(self.app_label, schema_editor, from_state, to_state)
+            return (from_state, to_state)
+
+        def _apply_operations(operations):
+            if not operations:
+                return
+
+            for operation in operations:
+                from_state, to_state = _apply_operation(operation)
+                injected_operations = emit_post_operation_signal(
+                    migration=self,
+                    operation=operation,
+                    from_state=from_state,
+                    to_state=to_state,
+                )
+                _apply_operations(injected_operations)
+
+        try:
+            _apply_operations(self.operations)
+        except RecursionError:
+            raise RecursionError(
+                "A cycle in the post_operation signal's chain has caused infinite recursion."
+            )
+
         return project_state
 
     def unapply(self, project_state, schema_editor, collect_sql=False):
@@ -129,6 +159,10 @@ class Migration:
         Take a project_state representing all migrations prior to this one
         and a schema_editor for a live database and apply the migration
         in a reverse order.
+
+        For each operation, the injected operations from post_operation signal
+        receivers are collected recursively, using an in-order traversal (LNR)
+        approach.
 
         The backwards migration process consists of two phases:
 
@@ -139,18 +173,39 @@ class Migration:
         """
         # Construct all the intermediate states we need for a reverse migration
         to_run = []
-        new_state = project_state
+
         # Phase 1
-        for operation in self.operations:
-            # If it's irreversible, error out
-            if not operation.reversible:
-                raise IrreversibleError("Operation %s in %s is not reversible" % (operation, self))
-            # Preserve new state from previous run to not tamper the same state
-            # over all operations
-            new_state = new_state.clone()
-            old_state = new_state.clone()
-            operation.state_forwards(self.app_label, new_state)
-            to_run.insert(0, (operation, old_state, new_state))
+        def _collect_operations(operations, to_state):
+            if not operations:
+                return
+
+            for operation in operations:
+                # If it's irreversible, error out
+                if not operation.reversible:
+                    raise IrreversibleError("Operation %s in %s is not reversible" % (operation, self))
+                # Preserve new state from previous run to not tamper the same state
+                # over all operations
+                to_state = to_state.clone()
+                from_state = to_state.clone()
+                operation.state_forwards(self.app_label, to_state)
+                to_run.insert(0, (operation, from_state, to_state))
+
+                # Insert injected operations from post_operation signal receivers.
+                injected_operations = emit_post_operation_signal(
+                    migration=self,
+                    operation=operation,
+                    from_state=from_state,
+                    to_state=to_state,
+                )
+
+                _collect_operations(injected_operations, to_state)
+
+        try:
+            _collect_operations(self.operations, project_state)
+        except RecursionError:
+            raise RecursionError(
+                "A cycle in the post_operation signal's chain has caused infinite recursion."
+            )
 
         # Phase 2
         for operation, to_state, from_state in to_run:
